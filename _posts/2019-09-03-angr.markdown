@@ -1,0 +1,74 @@
+---
+layout: post
+title:  "angr"
+date:   2019-09-02 15:14:54
+categories: Reverse
+tags: Reverse
+excerpt: angr学习
+mathjax: true
+---
+
+### 0x00 angr使用
+
+编写一个测试程序
+```
+#include<stdio.h>
+void success(){
+    printf("success\n");
+    return 1;
+}
+void failed(){
+    printf("failed\n");
+    return 0;
+}
+int main(void){
+    char name[9];
+    scanf("%s",name);
+    if(!strcmp(name,"aabbcc")){
+        success();
+    }else{
+        failed();
+    }
+    return 0;
+}
+// gcc angr_demo1.c -o demo1
+```
+
+```
+from angr import *
+p = Project("demo1",auto_load_libs=False)
+
+# 设定初始状态
+state = p.factory.entry_state() #读取入口点   <SimState @ 0x400550>
+
+sm=p.factory.simulation_manager(state) # 创建一个模拟器用来模拟程序执行
+res=sm.explore(find=0x400646,avoid=0x400657) # 设置好find 和 avoid 的函数地址即可
+if len(res.found)>0:
+    print res.found[0].posix.dumps(0)
+
+```
+
+1. 
+```
+
+```
+### 0x01 控制流平坦化
+将顺序的执行流程，修改成状态机
+
+### XCUNA Strange_Interpreter
+
+1. 定位关键块
+需要定位的块有：ret块,真实块,序言块
+使用angr
+
+
+### 参考链接
+
+https://bbs.pediy.com/thread-251326.htm#llvm%E5%85%A5%E9%97%A8%E7%AF%87%E5%89%A7%E5%9C%BA%E7%89%88
+
+binary Ninja插件 https://zhuanlan.zhihu.com/p/33641488
+
+https://paper.seebug.org/192/
+https://blog.quarkslab.com/deobfuscation-recovering-an-ollvm-protected-program.html
+https://www.anquanke.com/post/id/169318#h2-2
+

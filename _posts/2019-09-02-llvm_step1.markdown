@@ -1,0 +1,41 @@
+---
+layout: post
+title:  "llvm"
+date:   2019-09-02 15:14:54
+categories: Reverse
+tags: Reverse
+excerpt: llvm
+mathjax: true
+---
+
+听说llvm 是代码混淆的神器，网上也能够搜到一些相关的CTF题目( 例如 0CTF 2017 Quals – Zer0llvm ), 简单尝试一下llvm相关的使用和逆向。
+
+### 0x00 llvm安装
+下载llvm
+git clone https://github.com/obfuscator-llvm/obfuscator.git
+mkdir build 
+cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_INCLUDE_TESTS=OFF ../
+make -j4   # 如果编译失败可能是因为内存不足
+make install 
+
+
+### 0x01 控制流平坦化
+将顺序的执行流程，修改成状态机
+
+### XCUNA Strange_Interpreter
+
+1. 定位关键块
+需要定位的块有：ret块,真实块,序言块
+使用angr
+
+
+### 参考链接
+
+https://bbs.pediy.com/thread-251326.htm#llvm%E5%85%A5%E9%97%A8%E7%AF%87%E5%89%A7%E5%9C%BA%E7%89%88
+
+binary Ninja插件 https://zhuanlan.zhihu.com/p/33641488
+
+https://paper.seebug.org/192/
+https://blog.quarkslab.com/deobfuscation-recovering-an-ollvm-protected-program.html
+https://www.anquanke.com/post/id/169318#h2-2
+
