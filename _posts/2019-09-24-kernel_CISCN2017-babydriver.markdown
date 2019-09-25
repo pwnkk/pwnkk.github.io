@@ -120,6 +120,7 @@ write前后对比
 编译模块获取cred结构大小
 还有一个问题是如何知道cred的大小，一种方法是看源码，这种方法比较慢，还容易出错。另一种方法是编译一个内核模块来查看：
 
+```
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/cred.h>
@@ -139,9 +140,11 @@ static void hello_exit(void)
 
 module_init(hello_init);
 module_exit(hello_exit);
+```
 
 Makefile：
 
+```
 obj-m := cred_size.o
 KERNELBUILD := /lib/modules/$(shell uname -r)/build
 
@@ -149,8 +152,15 @@ modules:
     make -C $(KERNELBUILD) M=$(CURDIR) modules
 clean:
     make -C $(KERNELBUILD) M=$(CURDIR) clean
-来源： http://pwn4.fun/2017/08/15/Linux-Kernel-UAF/
+```
+
+
 
 
 
 方法2：使用tty 结构
+
+
+### 参考链接
+
+http://pwn4.fun/2017/08/15/Linux-Kernel-UAF/
