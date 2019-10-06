@@ -8,9 +8,13 @@ excerpt: angr学习
 mathjax: true
 ---
 
+* content
+{:toc}
+
 ### 0x00 angr使用
 
-编写一个测试程序
+1. demo程序
+
 ```
 #include<stdio.h>
 void success(){
@@ -47,6 +51,8 @@ if len(res.found)>0:
     print res.found[0].posix.dumps(0)
 
 ```
+
+2. 获取符号
 
 ### 0x01 控制流平坦化
 将顺序的执行流程，修改成状态机
