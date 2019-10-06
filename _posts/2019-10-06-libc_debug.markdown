@@ -1,10 +1,9 @@
 ---
 layout: post
 title:  "pwn题目调试问题总结"
-date:   2019-10-6 22:18:00
 categories: pwn
 tags: debug
-excerpt: 源码调试/跨libc调试/pie处理
+excerpt: 源码调试/跨libc调试/pie地址偏移
 mathjax: true
 ---
 
@@ -41,10 +40,10 @@ p.interactive()
 ` patchelf --set-interpreter ./ld-linux-x86-64.so.2 ./mergeheap`
 再执行exp.py 就能跑起来了
 
-### 2. 源码调试/PIE
+#### 2. 源码调试/PIE
 参考其他大佬的exp
 
-```
+```python
 from pwn import *
 
 context.terminal = ["tmux","splitw","-h"]

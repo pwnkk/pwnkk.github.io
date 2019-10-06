@@ -20,8 +20,8 @@ description_footer: pwnkk
 # comments
 # two ways to comment, only choose one, and use your own short name
 # 两种评论插件，选一个就好了，使用自己的 short_name
-duoshuo_shortname: #hygblog
-disqus_shortname: #gaohaoyang
+#duoshuo_shortname: #hygblog
+#disqus_shortname: #gaohaoyang
 
 #baidu_tongji_id: 1cc1fc4b4b456bf7c99ce80aec5bf009
 #google_analytics_id: UA-72449510-4 # google 分析追踪id
@@ -33,8 +33,6 @@ kramdown:
   input: GFM
   syntax_highlighter: rouge
 
-# port
-# port: 1234
 
 # url
 category_dir: category/
