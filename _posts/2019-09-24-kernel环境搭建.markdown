@@ -173,5 +173,5 @@ gdb内核调试问题:
 `set architecture i386:x86-64:intel`
 
 ### 参考链接
-* [内核环境配置] (https://xz.aliyun.com/t/2024)
+* [内核环境配置](https://xz.aliyun.com/t/2024)
 
