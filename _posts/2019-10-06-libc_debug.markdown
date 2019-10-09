@@ -41,6 +41,18 @@ p.interactive()
 再执行exp.py 就能跑起来了
 
 #### 2. 源码调试/PIE
+
+* 为什么要源码调试
+libc源码调试能够加深对于libc中heap分配,IO处理等流程的理解,也更利于快速定位问题
+例如错误提示"corrupted double-linked list"​，从源码中定位到
+
+```
+    if (__builtin_expect (FD->bk != P || BK->fd != P, 0))		      \
+      malloc_printerr (check_action, "corrupted double-linked list", P, AV);  \
+```
+
+就知道是unlink操作 fd和bk的校验没有通过，再检查内存中对应的值即可
+
 参考其他大佬的exp
 
 ```python
