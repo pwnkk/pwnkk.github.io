@@ -27,7 +27,22 @@ type: page
 + SROP
 
 #### 0x01 堆利用
+glibc_malloc_for_exploiters
+https://blog.frizn.fr/glibc/glibc-heap-to-rip
+[poisoned-nul-byte](https://googleprojectzero.blogspot.com/2014/08/the-poisoned-nul-byte-2014-edition.html)
+#### 0x02 内核利用
 
+#### 0x03 其他架构
+
+##### 1. MACOS heap利用
+题目：
++ [balsnctf-2019-machbook](https://github.com/how2hack/my-ctf-challenges/tree/master/balsnctf-2019/machbook)
++ [0ctf appie](https://www.tasteless.eu/post/2019/04/0ctf_quals_applepie/)
+
+ 
+REF
++ [libmalloc-exploitation](https://www.slideshare.net/AngelBoy1/macos-memory-allocator-libmalloc-exploitation)
++ [OS X Heap Exploitation](https://papers.put.as/papers/macosx/2016/Summercon-2016.pdf)
 
 ## Comments
 

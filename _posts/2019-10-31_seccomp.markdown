@@ -1,0 +1,15 @@
+---
+layout: post
+title:  "seccomp学习"
+categories: pwn
+tags: debug
+excerpt: seccomp学习
+mathjax: true
+---
+
+* content
+{:toc}
+
+### Overview
+
+seccomp 作为过滤系统调用的机制已经存在很久了,可以限制程序的功能,在pwn中考察shellcode的编写。

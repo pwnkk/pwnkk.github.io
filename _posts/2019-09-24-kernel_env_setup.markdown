@@ -130,6 +130,9 @@ insmod /lib/hello.ko
 创建文件系统
 
 `find . | cpio -o --format=newc > ../rootfs.img`
+tips : 一般img的内核文件都是采用这种方式压缩，解压时 `cpio -ivmd < initrd.img`, 有时还会在外层用gzip再次压缩
+
+
 
 将rootfs.img 和 bzImage 都放到当前目录下
 执行启动脚本run.sh
