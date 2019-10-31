@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Collections
-permalink: /collection/
+title: Diary
+permalink: /diary/
 icon: bookmark
 type: page
 ---
@@ -10,7 +10,6 @@ type: page
 {:toc}
 
 ### Diary 2019
-记一下日记
 
 #### 2019-10-25
 
@@ -31,6 +30,15 @@ exp: scan cred / cred spray
 3. [google ctf wp](https://hackmd.io/@gzUPn_btRq2TbqRUdfX9Cw/rkfEQo4gH#Monochromatic)
 4. [*ctf hackme](https://github.com/sixstars/starctf2019/tree/master/pwn-hackme)
 5. https://duasynt.com/blog/linux-kernel-heap-spray
+
+#### 2019-10-31
+
+1. 朋友发来了练手的题目,看了下seccomp过滤,顺便改了下出了道新题目，考一些shellcode 编写和简单leak
+
+[hitcon-quals-2017-seccomp](https://blukat29.github.io/2017/11/hitcon-quals-2017-seccomp/)
+[seccomp学习笔记](https://veritas501.space/2018/05/05/seccomp学习笔记/)
+
+
 ## Comments
 
 {% include comments.html %}

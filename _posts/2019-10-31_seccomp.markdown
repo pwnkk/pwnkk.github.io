@@ -13,3 +13,63 @@ mathjax: true
 ### Overview
 
 seccomp 作为过滤系统调用的机制已经存在很久了,可以限制程序的功能,在pwn中考察shellcode的编写。
+
+### 使用seccomp
+
+1. 安装
+`sudo apt install libseccomp-dev libseccomp2 seccomp`
+
+demo.c 
+```
+#include<stdio.h>
+#include <unistd.h>
+#include <seccomp.h>
+#include <linux/seccomp.h>
+
+int init(){
+    setbuf(stdout,0);
+    setbuf(stdin,0);
+    return alarm(20);
+}
+void sec_rule(){
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_KILL);
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0);
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 0);
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0);
+    seccomp_load(ctx);
+}
+void main(){
+    init();
+    sec_rule();
+    char buf[10];
+    read(0,buf,100);
+    system("/bin/sh");
+}
+//gcc demo.c -o demo -lseccomp
+
+asd
+Bad system call
+
+```
+结果调用system时显示Bad system call 达到限制系统调用的目的
+
+2. 读取seccomp规则
+
+借用工具[seccomp-tools](https://github.com/david942j/seccomp-tools)
+
+```
+root@ubuntu# seccomp-tools dump ./demo
+ line  CODE  JT   JF      K
+=================================
+ 0000: 0x20 0x00 0x00 0x00000004  A = arch
+ 0001: 0x15 0x00 0x07 0xc000003e  if (A != ARCH_X86_64) goto 0009
+ 0002: 0x20 0x00 0x00 0x00000000  A = sys_number
+ 0003: 0x35 0x00 0x01 0x40000000  if (A < 0x40000000) goto 0005
+ 0004: 0x15 0x00 0x04 0xffffffff  if (A != 0xffffffff) goto 0009
+ 0005: 0x15 0x02 0x00 0x00000000  if (A == read) goto 0008
+ 0006: 0x15 0x01 0x00 0x00000001  if (A == write) goto 0008
+ 0007: 0x15 0x00 0x01 0x00000002  if (A != open) goto 0009
+ 0008: 0x06 0x00 0x00 0x7fff0000  return ALLOW
+ 0009: 0x06 0x00 0x00 0x00000000  return KILL
+```
