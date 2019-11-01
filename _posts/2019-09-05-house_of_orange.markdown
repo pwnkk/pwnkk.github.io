@@ -118,8 +118,6 @@ libio.h 中 _IO_FILE结构体定义
 struct _IO_FILE {
   int _flags;		/* High-order word is _IO_MAGIC; rest is flags. */
 #define _IO_file_flags _flags
-
-  /* The following pointers correspond to the C++ streambuf protocol. */
   /* Note:  Tk uses the _IO_read_ptr and _IO_read_end fields directly. */
   char* _IO_read_ptr;	/* Current read pointer */
   char* _IO_read_end;	/* End of get area. */
@@ -135,9 +133,7 @@ struct _IO_FILE {
   char *_IO_save_end; /* Pointer to end of non-current get area. */
 
   struct _IO_marker *_markers;
-
   struct _IO_FILE *_chain;
-
   int _fileno;
 #if 0
   int _blksize;

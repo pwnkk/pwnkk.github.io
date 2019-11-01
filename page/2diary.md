@@ -37,7 +37,14 @@ exp: scan cred / cred spray
 
 [hitcon-quals-2017-seccomp](https://blukat29.github.io/2017/11/hitcon-quals-2017-seccomp/)
 [seccomp学习笔记](https://veritas501.space/2018/05/05/seccomp学习笔记/)
+2. 整理了下自己的pwn模板, 稍微改了下兼容性
 
+#### 2019-11-1
+1. 使用stdout 结构体泄露libc地址，就是修改write_base 的最低位，flag = 0xfbad1800 就行了。
+网上题目大都是tcache相关的，我跟着思路出了个旧版libc的，unsorted bin attack 和 fastbin attack 结合起来就行了
+2. 相关题目
+[lctf2018-pwn-easy_heap](https://ctf-wiki.github.io/ctf-wiki/pwn/linux/glibc-heap/tcache_attack-zh/#challenge-1-lctf2018-pwn-easy_heap)
+[sctf2019-pwn_one_heap](http://blog.eonew.cn/archives/1076#pwn_one_heap)
 
 ## Comments
 
