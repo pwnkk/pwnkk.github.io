@@ -46,6 +46,23 @@ exp: scan cred / cred spray
 [lctf2018-pwn-easy_heap](https://ctf-wiki.github.io/ctf-wiki/pwn/linux/glibc-heap/tcache_attack-zh/#challenge-1-lctf2018-pwn-easy_heap)
 [sctf2019-pwn_one_heap](http://blog.eonew.cn/archives/1076#pwn_one_heap)
 
+#### 2019-11-9
+1. 湖湘杯
+leak libc相关题目
+https://blog.csdn.net/weixin_42151611/article/details/99228675
+https://blog.csdn.net/qq_41252520/article/details/101620453
+https://xz.aliyun.com/t/5853
+
+2. 写一个gdb 插件, 可以自动设置解析地址的，兼容静态编译的情况，今天碰到很被动
+3. android ROM 逆向开坑
+https://bbs.pediy.com/thread-254831.htm
+https://bbs.pediy.com/thread-254830.htm
+
+#### 2019-11-13
+1. 出了一道wasm的题
+2. [llvm 去平坦化](https://github.com/cq674350529/deflat)
+3. [SUCTF 2019 逆向](https://www.52pojie.cn/forum.php?mod=viewthread&tid=1039478extra=page%3D1%26filter%3Dauthor%26orderby%3Ddateline#28221000_hardcpp)
+4. [协程切换的临界区块控制不当而引发的UAF血案](https://bbs.pediy.com/thread-224686.htm)
 ## Comments
 
 {% include comments.html %}

@@ -1,0 +1,38 @@
+---
+layout: post
+title:  "wasm"
+categories: Reverse
+tags: wasm
+excerpt: wasm 学习
+mathjax: true
+---
+
+* content
+{:toc}
+
+### Overview
+
+
+### demo
+在线生成工具
+https://mbebenita.github.io/WasmExplorer/
+
+
+反汇编工具 [wabt](https://github.com/WebAssembly/wabt)
+```
+$ mkdir build
+$ cd build
+$ cmake .. -DBUILD_TESTS=OFF
+$ cmake --build .
+```
+使用wasm2c 转换出c代码,但是转换出的代码依然没有可读性，因此要用gcc编译一下，再用IDA来看
+`wasm2c ./program.wasm -o test.c`
+需要找两个文件 wasm-rt.h(wabt目录中) wasm.h(搜了一下在chrome源码的目录里面) 
+`gcc -c test.c -o test` 只编译不链接 
+
+
+
+
+
+
+
