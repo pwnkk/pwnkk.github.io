@@ -76,6 +76,10 @@ https://bbs.pediy.com/thread-254830.htm
 #### 2019-11-16
 1. 逆向工具 https://cutter.re/
 
+#### 2019-11-21 
+1. 补充了一下heap的ppt, 发现还有好多坑没有填上，比如 SROP / house of orange的后续libc版本bypass / IO stdout的leak
+
+
 ## Comments
 
 {% include comments.html %}

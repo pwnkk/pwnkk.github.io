@@ -214,6 +214,7 @@ realloc内部
 
 从realloc+20开始，构造"a"*0xb+p64(one)+p64(realloc+20)
 发现 $rsp+0x70 为0 , 满足0xf1147的条件成功getshell
+
 关于栈空间内存值和realloc地址之间的关系还是高度依赖环境。
 
 从这道题目来看，再次申请free_got 直接system("/bin/sh") 似乎是更好的选择 。。。

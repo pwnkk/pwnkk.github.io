@@ -161,15 +161,22 @@ _flags | = _IO_IS_APPENDING // _flags = 0xfbad1800
 
 ### SCTF-2019-oneheap
 
-1. 逆向分析：程序是堆题目，有tcache，功能上只有两个选项，保护全开,只有一个堆指针
+#### 1. 逆向分析
+程序是堆题目，有tcache，功能上只有两个选项，保护全开,只有一个堆指针
+
 * add: size小于0x7f
 * free : free 后没有清空指针, 由于没有edit功能，这里就只能是double free(感谢tcache没有double free的check)，free次数限制4次
 难点在于没有leak且free次数有限
+* 程序保护全开
 
-2. 利用思路
+#### 2. 利用思路
 
-* 首先可以确定通过覆盖stdout结构的方式进行泄露，需要一个main_arena 地址进行部分写申请到stdout ,但是在tcache的情况下需要free 7次填满tcache 后才能释放到unsorted bin 中获取到main_arena 地址,free 次数最多只有4次。
-* 攻击tcache_perthread_struct 
+问题1：没有show函数如何leak libc
+* 通过覆盖stdout结构的方式进行泄露，需要一个main_arena 地址进行部分写申请到stdout ,但是在tcache的情况下需要free 7次填满tcache 后才能释放到unsorted bin 中获取到main_arena 地址,free 次数最多只有4次。
+
+问题2：free次数不够如何构造unsorted bin 
+
+* 攻击tcache_perthread_struct ,
 tcache_perthread_struct 是管理tcache的结构，其中维护了已有的tcache chunk 地址
 ```
 typedef struct tcache_perthread_struct
@@ -178,10 +185,9 @@ typedef struct tcache_perthread_struct
   tcache_entry *entries[TCACHE_MAX_BINS];
 } tcache_perthread_struct;
 ```
-这个结构就放在堆的起始地址，基于double free 部分覆盖next指针指向tcache_perthread_struct 即可控制
-修改tcache_perthread_struct 结构，中的count 让程序误认为已经有很多tcache ，因此下一次free 即可放到unsorted bin 中
 
-* 
+这个结构就放在堆的起始地址，基于double free 部分覆盖next指针指向tcache_perthread_struct 即可控制
+修改其中的count 让程序误认为已经有很多tcache ，因此下一次free 即可放到unsorted bin 中
 
 * double free + 部分覆盖
 
@@ -216,8 +222,9 @@ tcachebins
 ```
 可以看到同一个chunk两次被放到了tcachebin中,再通过new 将这个chunk fd修改为0x5587f864b000 ,即可控制tcache_perthread_struct
 
-* 
-
 * leak 地址
 
+
+
+> 部分写覆盖tcache的fd字段（该字段通过之前的tcache attack，已经预留一个libc地址）使其指向stdout，同时在修改的时候用unsorted bin attack打一个libc地址到stdout-flag（为了之后继续用tcache）。然后用tcache分配到stdout附近，修改stdout->flag（加APPENDING标识），并修改stdout->_IO_write_base最后一字节为'\x00'，泄露libc，然后tcache再次分配会分配到main_arena->top，修改top为malloc_hook 附近，并修复unsorted bin。之后就是常规操作了
 
