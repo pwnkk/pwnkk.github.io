@@ -189,6 +189,9 @@ typedef struct tcache_perthread_struct
 这个结构就放在堆的起始地址，基于double free 部分覆盖next指针指向tcache_perthread_struct 即可控制
 修改其中的count 让程序误认为已经有很多tcache ，因此下一次free 即可放到unsorted bin 中
 
+double free 导致chunk的fd指向自己形成了一个无限循环,当调用malloc时可以多次申请出同一个chunk，每次结构中count 就会减1
+如果两次free, 三次malloc就会导致
+
 * double free + 部分覆盖
 
 ```

