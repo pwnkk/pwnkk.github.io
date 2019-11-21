@@ -47,6 +47,10 @@ tools/dev/v8gen.py x64.debug
 ninja -C out.gn/x64.debug
 ```
 
-### v9
+### 34c3 v9 writeup
+
+### 环境搭建
+
+
 
 

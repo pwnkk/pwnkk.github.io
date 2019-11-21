@@ -30,6 +30,13 @@ type: page
 glibc_malloc_for_exploiters
 https://blog.frizn.fr/glibc/glibc-heap-to-rip
 [poisoned-nul-byte](https://googleprojectzero.blogspot.com/2014/08/the-poisoned-nul-byte-2014-edition.html)
+
+* fastbin attack : 伪造的size 只校验了4个字节
+
+* leak libc
+
+* 攻击getshell
+
 #### 0x02 内核利用
 
 #### 0x03 其他架构

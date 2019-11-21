@@ -40,6 +40,7 @@ exp: scan cred / cred spray
 2. 整理了下自己的pwn模板, 稍微改了下兼容性
 
 #### 2019-11-1
+
 1. 使用stdout 结构体泄露libc地址，就是修改write_base 的最低位，flag = 0xfbad1800 就行了。
 网上题目大都是tcache相关的，我跟着思路出了个旧版libc的，unsorted bin attack 和 fastbin attack 结合起来就行了
 2. 相关题目
@@ -47,6 +48,7 @@ exp: scan cred / cred spray
 [sctf2019-pwn_one_heap](http://blog.eonew.cn/archives/1076#pwn_one_heap)
 
 #### 2019-11-9
+
 1. 湖湘杯
 leak libc相关题目
 https://blog.csdn.net/weixin_42151611/article/details/99228675
@@ -59,10 +61,21 @@ https://bbs.pediy.com/thread-254831.htm
 https://bbs.pediy.com/thread-254830.htm
 
 #### 2019-11-13
+
 1. 出了一道wasm的题
 2. [llvm 去平坦化](https://github.com/cq674350529/deflat)
 3. [SUCTF 2019 逆向](https://www.52pojie.cn/forum.php?mod=viewthread&tid=1039478extra=page%3D1%26filter%3Dauthor%26orderby%3Ddateline#28221000_hardcpp)
 4. [协程切换的临界区块控制不当而引发的UAF血案](https://bbs.pediy.com/thread-224686.htm)
+5. https://retdec.com/
+
+#### 2019-11-15  
+
+1. Dockfile 只支持相对路径的COPY
+2. 删除所有错误镜像 `docker rmi $(docker images | grep "none" | awk '{print $3}')` 
+
+#### 2019-11-16
+1. 逆向工具 https://cutter.re/
+
 ## Comments
 
 {% include comments.html %}

@@ -162,10 +162,7 @@ bk = __IO_list_all-0x10 即可。
 查看_chain 字段在IO_FILE中的偏移是0x60, 控制fp->_chain 字段指向一个可控位置，进而伪造可控的IO_FILE 结构体即可。
 
 偏移0x60 的地方正好对应着0x60 的small bin 的位置, 因此IO_FILE结构需要构造在一个0x60 大小的small bin 中
-将之前的unsorted bin size 修改为0x60 ,
-
-??? 从unsorted bin 到small bin 需要一个大的malloc , 但是此时堆结构已经破坏，如何完成?
-
+将之前的unsorted bin size 修改为0x60 
 
 ### 0x03 题目分析 house of orange
 
