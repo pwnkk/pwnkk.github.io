@@ -1,9 +1,9 @@
 ---
 layout: post
-title:  "湖湘杯2019 pwn"
+title:  "湖湘杯2019 Namesystem"
 categories: pwn
 tags: pwn
-excerpt: 湖湘杯2019 pwn
+excerpt: 湖湘杯2019 Namesystem
 mathjax: true
 ---
 
@@ -216,6 +216,7 @@ realloc内部
 发现 $rsp+0x70 为0 , 满足0xf1147的条件成功getshell
 关于栈空间内存值和realloc地址之间的关系还是高度依赖环境。
 
+从这道题目来看，再次申请free_got 直接system("/bin/sh") 似乎是更好的选择 。。。
 ### 利用脚本
 
 ```
