@@ -243,7 +243,7 @@ all: 0x555555759310 —▸ 0x7ffff7dcfca0 (main_arena+96) ◂— 0x555555759310
 
 onegadget 直接覆盖malloc_hook 不好用, 需要将malloc_hook覆盖为realloc的地址,再将realloc_hook覆盖为onegadget,可以通过调整realloc 的地址来满足onegadget 的条件。 
 
-![](IMG/2019-10-31-leak_IO_stdout/oneheap.png)
+![](https://github.com/pwnkk/pwnkk.github.io/raw/master/_posts/IMG/2019-10-31-leak_IO_stdout/oneheap.png)
 
 #### Final
 
