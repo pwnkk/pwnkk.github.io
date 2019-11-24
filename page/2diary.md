@@ -79,6 +79,8 @@ https://bbs.pediy.com/thread-254830.htm
 #### 2019-11-21 
 1. 补充了一下heap的ppt, 发现还有好多坑没有填上，比如 SROP / house of orange的后续libc版本bypass / IO stdout的leak
 
+#### 2019-11-22
+1. 总结堆管理及其利用，文章和ppt 提上日程，可以尝试一下web端的ppt制作，尽量精简
 
 ## Comments
 

