@@ -74,13 +74,23 @@ https://bbs.pediy.com/thread-254830.htm
 2. 删除所有错误镜像 `docker rmi $(docker images | grep "none" | awk '{print $3}')` 
 
 #### 2019-11-16
+
 1. 逆向工具 https://cutter.re/
 
-#### 2019-11-21 
+#### 2019-11-21  
+
 1. 补充了一下heap的ppt, 发现还有好多坑没有填上，比如 SROP / house of orange的后续libc版本bypass / IO stdout的leak
 
 #### 2019-11-22
+
 1. 总结堆管理及其利用，文章和ppt 提上日程，可以尝试一下web端的ppt制作，尽量精简
+
+#### 2019-11-28
+
+1. C# 入门, 解决了using 找不到的问题, 可以在VS项目中添加引用。软件保护[ConfuserEx](https://yck1509.github.io/ConfuserEx/)和[NoFuserEx](https://github.com/CodeShark-Dev/NoFuserEx)
+2. [modern-windows-userspace-exploitation](https://github.com/saaramar/35C3_Modern_Windows_Userspace_Exploitation#35c3-modern-windows-userspace-exploitation)
+3. `git clone --recursive` 递归下载
+4. 看了一些路由器漏洞方面的漏洞，原理都是简单的栈溢出
 
 ## Comments
 
