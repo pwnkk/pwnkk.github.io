@@ -92,6 +92,21 @@ https://bbs.pediy.com/thread-254830.htm
 3. `git clone --recursive` 递归下载
 4. 看了一些路由器漏洞方面的漏洞，原理都是简单的栈溢出
 
+#### 2020-1-5
+
+1. 入门xposed 框架 , 需要搞一个关机劫持的功能做演示。
+搜了一下是有这样的恶意软件hijackPowerOff , github找到一个实现
+[hijackAndroidPowerOff](https://github.com/monstersb/hijackAndroidPowerOff)
+但是使用xposed 框架 ，基本可以满足需求。
+
+后续再讨论如何在没有框架时进行进程注入。这可能是个大坑
+
+2. Android Studio查看方法注释的快捷键 ctrl + q
+
+
+
+
+
 ## Comments
 
 {% include comments.html %}

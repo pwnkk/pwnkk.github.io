@@ -14,7 +14,7 @@ mathjax: true
 
 开始v8 引擎的环境搭建
 
-### 配置代理
+### 0x00 配置代理
 需要的代理有两个
 1. git 代理
 `git config --global http.proxy http://ip:port`
@@ -24,7 +24,7 @@ export http_proxy="http://ip:port/"
 export https_proxy=$http_proxy
 ```
 
-### 其他配置
+### 0x01 编译安装
 
 安装depot_tools
 ```
@@ -45,6 +45,29 @@ cd v8
 gclient sync  # 同步一下
 tools/dev/v8gen.py x64.debug
 ninja -C out.gn/x64.debug
+```
+
+### 0x02 vscode + ccls
+
+```
+git clone https://github.com/MaskRay/ccls
+cd ccls
+# 在ccls根目录下执行
+# 第0步，下载第三方依赖
+git submodule update --init --recursive
+# 第一步，下载llvm的二进制包
+wget -c http://releases.llvm.org/8.0.0/clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+# 解压二进制包
+tar xf clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+# 在当前文件目录下执行cmake 执行结果保存到Release文件夹中
+cmake -H. -BRelease -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-18.04
+cmake --build Release
+# 开始编译并安装
+cd Release
+# 这里使用4线程编译，当然如果你的电脑够强的话，可以直接-j或者使用更搞核数加快编译
+make -j4
+# 编译完成，安装
+sudo make install
 ```
 
 ### 34c3 v9 writeup

@@ -76,13 +76,12 @@ Offset      0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F
 ```
 地址逐渐减小,字符串是倒序存放的, 因此APP_STATION_MODBUS 对应的加载地址就是0x27656c
 
-base = 0x27656c - 0x26656c = 0x1000
+base = 0x27656c - 0x26656c = 0x100000
 
 2. 查看代码中有没有固定地址加偏移的引用，偏移就可能是固件加载地址。这种方法范围太广没有找到
 IDA 打开设置PowerPC big endian , 选了32bit ,打开后全部只是数据,选择开头按c强制反汇编才行。没有得到什么有意义的信息。
 
 3. 从固件头部查找Userinit函数
-
 
 ### 恢复函数表
 
@@ -140,9 +139,7 @@ while ea < eaEnd:
 确实能恢复出来
 ![](IMG/2019-11-25-Vxworks_re/result.png)
 
-
 题目已知hash值cQwwddSRxS 求key
-
 
 ### 参考
 [再解Vxworks加密漏洞](https://www.freebuf.com/vuls/177036.html)
