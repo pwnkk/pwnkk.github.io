@@ -1,0 +1,34 @@
+---
+layout: post
+title:  "windbg备忘"
+categories: tools
+tags: tools
+excerpt: windbg备忘
+mathjax: true
+---
+
+* content
+{:toc}
+
+### 运行
+
+|命令|解释|
+| --- | --- |
+|g|继续运行|
+|gu |执行到当前函数完成时停下|
+|bp addr|断点| 
+|p | 步过|
+|T | 步入|
+
+### 显示
+|命令|解释|
+| --- | --- |
+|r|查看修改寄存器
+|Dd ebp L2|32位显示ebp指向的地址处的数据|
+|U address| 反汇编address处的数据|
+|Uf 7224e2d0 | 反汇编整个函数 
+|K |  栈回溯 |
+|X |basic_vuln!prize|   查看basic_vuln中 prize函数的地址.
+|s  - type pattern| 指定范围内搜索字符串
+|Dt nt!_peb| 显示nt模块中的peb结构信息
+

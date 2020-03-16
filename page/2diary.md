@@ -103,10 +103,39 @@ https://bbs.pediy.com/thread-254830.htm
 
 2. Android Studio查看方法注释的快捷键 ctrl + q
 
+#### 2020-2-12 
+
+IE 漏洞复现
+1. 复现了CVE-2012-1889
+需要安装JDK 才能提供绕过ASLR的dll 
+https://bbs.pediy.com/thread-215974.htm
+https://github.com/whu-enjoy/CVE-2012-1889 (好用的exp)
 
 
+https://theori.io/research/chakra-jit-cfg-bypass
+https://theori.io/research/jscript9_typed_array
 
+http://blogs.360.cn/post/three-roads-lead-to-rome.html
 
+恶意apk 逆向
+https://zhuanlan.zhihu.com/p/34711959
+
+##### 2020-2-24
+三星KNOX 静默安装
+https://cloud.tencent.com/developer/article/1036581
+
+##### 2020-3-6 
+
+Android 任务劫持
+### 多任务概念
+* PC 多进程同一时刻运行
+* Android 端 每个任务是由多个activity组成，而这些activity可能来自不同的app
+
+taskAffinity = "com.paypal.android"
+allowTaskReparenting = true
+将M2移动到paypal的前台去
+
+ 
 ## Comments
 
 {% include comments.html %}

@@ -12,7 +12,6 @@ mathjax: true
 
 ### Overview
 
-这篇主要是做的学习笔记，争取系统的学习一下
 
 
 创建任意地址读写: ArrayBuffer和TypedArray
@@ -115,7 +114,6 @@ p和q因为有同样的属性名，所以被归类为同一个组，共享一个
 
 hidden class 的生成过程
 
-
 每个object 的第一个字段就指向hidden class 
 hidden class 其中 bit field 3 (存储属性的数量)和 指向descriptor array的指针。descriptor array中包含named properties信息 例如 name 和存储value的地址
 
@@ -152,16 +150,7 @@ In-object vs. normal properties
 
 每个属性load/store site 都有自己的IC和IC id 
 
-
 是对以下动作缓存优化的机制
-参照，代入(LoadIC, StoreIC) 
- 配列アクセス(KeyedLoadIC, KeyedStoreIC) 
- 二項演算(BinaryOpIC) ※最近のV8ではなくなった？ 
- 関数呼出(CallIC) 
- 比較(CompareIC) 
- ブーリアン化(ToBooleanIC) ※最近のV8ではなくなった？
-
-
 
 有以下4种状态
 * Premonomorphic 只通过一次 没有开始IC

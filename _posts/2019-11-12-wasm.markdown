@@ -30,9 +30,3 @@ $ cmake --build .
 需要找两个文件 wasm-rt.h(wabt目录中) wasm.h(搜了一下在chrome源码的目录里面) 
 `gcc -c test.c -o test` 只编译不链接 
 
-
-
-
-
-
-
