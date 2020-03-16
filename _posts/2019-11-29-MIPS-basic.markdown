@@ -1,5 +1,18 @@
+---
+layout: post
+title:  "MIPS 架构漏洞利用101"
+categories: pwn
+tags: pwn
+excerpt: MIPS 架构漏洞利用101
+mathjax: true
+---
+
+* content
+{:toc}
+
 # MIPS 汇编基础 
-1. 寄存器
+
+# 1. 寄存器
 
 | 寄存器   | 功能   | 
 |:----|:----|
