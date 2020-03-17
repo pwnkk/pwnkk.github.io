@@ -23,7 +23,9 @@ Javascript 的引擎大体分为四种,Spidermonkey (用于firefox) , Javascript
 ### 1. Parser 和bytecode compiler
 
 用于将javascript 转化为byte code。Parser 标记输入流，解析出AST语法树，随后AST被编译成bytecode。
-bytecode格式不同引擎有所区别，例如Spidermonkey 使用栈虚拟机，而v8采用寄存器虚拟机。类似的是都是动态类型，运行时根据不同类型用对应的处理方式，另外bytecode 通常没有优化过，一方面是为了加快启动时间，另一方面优化需要的类型信息在这个层面还不可用。
+
+不同引擎的bytecode格式有所区别，例如Spidermonkey 使用栈虚拟机，而v8采用寄存器虚拟机。因为javascript 是动态类型的语言，需要在运行时根据不同类型采用对应的处理方式。
+另外bytecode 通常没有优化过，一方面是为了加快启动时间，另一方面这时还缺少优化需要的类型信息。
 
 ### 2.
 

@@ -60,6 +60,5 @@ freed by thread T0 here:
 
 ### 参考
 
-[from-read-glibc-to-rce-x86_64](https://amriunix.com/post/from-read-glibc-to-rce-x86_64/?from=timeline)
 
 
