@@ -1,9 +1,9 @@
 ---
 layout: post
-title:  "Reverse tips"
+title:  "蓝牙安全"
 categories: REVERSE
 tags: REVERSE
-excerpt: 记录逆向中的基础知识
+excerpt: 蓝牙安全
 mathjax: true
 ---
 
