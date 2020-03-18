@@ -142,7 +142,7 @@ p.sendline(p1)
 p.interactive()
 
 
-![图片](https://uploader.shimo.im/f/QDZgwAc9bBEsh7wb.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/QDZgwAc9bBEsh7wb.png)
 
 运行结果
 
@@ -153,25 +153,25 @@ p.interactive()
 
 查找能从栈中加载到$a0 的gadget 
 
-![图片](https://uploader.shimo.im/f/SL8jjiuEGNoYKnX3.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/SL8jjiuEGNoYKnX3.png)
 
 选择0x0041B724处的gadget 
 
 ```
 |  0x0041B724  |  lw $a0,0x30+var_10($sp)  |  jr    0x30+var_4($sp)               
 ```
-![图片](https://uploader.shimo.im/f/ItwrN8Qri6ACMXx6.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/ItwrN8Qri6ACMXx6.png)
 
 在选择gadget时要考虑到sw 类指令能否成功执行，例如 sw $a1,0($s0) 是将$a1 内容存储到$s0 内的地址中，此时$s0 中需要放置一个合法地址，否则就会崩溃。 但是上图gadget 不需要
 
 # 编写exp
 需要注意的一点是$sp 地址的变化，在main函数结尾有如下代码 
 
-![图片](https://uploader.shimo.im/f/zqcJPpwnrXEdtvcS.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/zqcJPpwnrXEdtvcS.png)
 
 为了恢复栈帧，$sp = $sp +0x88 , 因此在gadget 中参考的$sp 是调整后$sp 
 
-![图片](https://uploader.shimo.im/f/G6J86x90RT8M9hsr.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/G6J86x90RT8M9hsr.png)
 
 exp2.py 
 
@@ -200,19 +200,19 @@ p.interactive()
 # BreizhCTF 2018 - MIPS
 checksec  vuln 
 
-![图片](https://uploader.shimo.im/f/UTq6HwQw9pooVjGL.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/UTq6HwQw9pooVjGL.png)
 
 mips 小端序 ，没有保护 ，程序静态链接
 
 题目给出了源码
 
-![图片](https://uploader.shimo.im/f/OPW2Vvz2TR48aWUE.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/OPW2Vvz2TR48aWUE.png)
 
 接收1023 字节, request[1024] 没有溢出 
 
 handle_client 函数
 
-![图片](https://uploader.shimo.im/f/VM23GnY9V54wUz9V.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/VM23GnY9V54wUz9V.png)
 
 输入 GET url  , 程序处理传入的url参数，此处局部变量 url[32]  传入urldecode 函数
 
@@ -303,13 +303,13 @@ set arch mips
 target remote 127.0.0.1:1234
 b *0x0400BB8
 ```
-![图片](https://uploader.shimo.im/f/S1ndLw79GT0N319r.png!thumbnail) 
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/S1ndLw79GT0N319r.png) 
 
 偏移为36 
 
 使用shellcode
 
-![图片](https://uploader.shimo.im/f/M7meShi7Z3UQ5jfq.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/M7meShi7Z3UQ5jfq.png)
 
 [http://shell-storm.org/shellcode/files/shellcode-80.php](http://shell-storm.org/shellcode/files/shellcode-80.php)
 
@@ -317,7 +317,7 @@ b *0x0400BB8
 
 编写exp如下 
 
-![图片](https://uploader.shimo.im/f/dO6FA5z5bLYPNgSo.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/dO6FA5z5bLYPNgSo.png)
 
 addr 处应该存放 0x76fff1ac
 
@@ -403,22 +403,22 @@ gdb-multiarch -x ./gdbsc
 
 * 先设置addr 为 0xaaaaaaaa ， 发送payload 前 pause() 暂停程序 , 执行exp.py 程序暂停
 
-![图片](https://uploader.shimo.im/f/lTLhPu4sTHU2dSa1.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/lTLhPu4sTHU2dSa1.png)
 
 * 从靶机中查找 目标pid
 
-![图片](https://uploader.shimo.im/f/FdFifsIHTV8wfgIH.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/FdFifsIHTV8wfgIH.png)
 
 * gdbserver 连接目标程序
 
-![图片](https://uploader.shimo.im/f/NZ8750omQZwNaIX0.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/NZ8750omQZwNaIX0.png)
 
 * 回到宿主机  gdb-multiarch -x ./gdbsc   ， gdbsc 内容同上
 * 继续执行 exp.py  
 
-![图片](https://uploader.shimo.im/f/WCKP0Nt2zpU7pRh3.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/WCKP0Nt2zpU7pRh3.png)
 
-![图片](https://uploader.shimo.im/f/ZBTMJ1kqnw4Tihq4.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/ZBTMJ1kqnw4Tihq4.png)
 
 定位到shellcode 地址为 0x7fffe934+36+4
 
@@ -467,7 +467,7 @@ malloc相关文件在/libc/stdlib/中，包含了三种堆实现
 
 下载后编译就可以发现默认使用malloc-standard
 
-![图片](https://uploader.shimo.im/f/EusTyl8gUP0jZ0gW.png!thumbnail)
+![图片](https://raw.githubusercontent.com/pwnkk/pwnkk.github.io/master/_posts/IMG/EusTyl8gUP0jZ0gW.png)
 
 
 参考
