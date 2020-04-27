@@ -135,7 +135,74 @@ taskAffinity = "com.paypal.android"
 allowTaskReparenting = true
 将M2移动到paypal的前台去
 
- 
-## Comments
+##### 2020-3-20 
 
-{% include comments.html %}
+渗透工具 使用LDAP 信道传输
+https://blog.fox-it.com/2020/03/19/ldapfragger-command-and-control-over-ldap-attributes/
+https://github.com/fox-it/LDAPFragger
+
+fuzz 相关
+
+[fuzz大集合](https://bbs.pediy.com/thread-249986.htm)
+
+https://www.peerlyst.com/posts/the-fuzzing-wiki-learning-to-fuzz-better-peerlyst
+
+[漏洞利用教程包含win利用](https://samsclass.info/127/127_F15.shtml)
+
+[AFL 源码分析](https://xz.aliyun.com/t/4628)
+
+[libFuzzerTutorial 推荐](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md)
+
+
+[upnp协议利用](https://www.jianshu.com/p/bce3f4047a65)
+https://blog.csdn.net/braddoris/article/details/41646789
+
+
+https://blog.csdn.net/qq_18105691/article/details/83339101
+
+
+[broadpwn](https://blog.exodusintel.com/2017/07/26/broadpwn/)
+
+upnp 编译过后使用upnp.a 文件 制造sig文件
+
+./pelf ./libupnp.a
+./sigmake libupnp.pat upnp.sig
+将sig 放入IDA 的sig目录下 ，shift + F5 打开
+
+#### 2020-3-27
+IDA添加结构体
+
+打开 View -> open subviews -> local types , insert 插入结构体
+typedef struct lelink
+{
+    /* data */
+    char unknow[651];
+    char device_type;
+} lelink;
+选中伪代码中某变量，选择convert to struct
+![](res/2020-03-27-11-33-46.png)
+
+远程调试
+root@q201:/ # ./android_server
+IDA Android 32-bit remote debug server(ST) v1.22. Hex-Rays (c) 2004-2017
+Listening on 0.0.0.0:23946...
+
+adb forward tcp:23946 tcp:23946
+
+##### 2020-4-14
+
+保护措施：
+运行状态监控，如果发现违规操作立马禁止
+检测的时间和位置
+* 在写入危险字节前就停止进程
+* 类似canary，允许写入，但是后续触发后结束进程
+
+4种攻击向量
+
+* code injection
+* control-ﬂow hijacking
+* data-only attacks
+* information leaks
+ 
+CFI 
+
