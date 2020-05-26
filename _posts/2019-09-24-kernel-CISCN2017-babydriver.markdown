@@ -42,13 +42,12 @@ init 脚本中发现
 
 1. 功能分析
 
-
 * babyioctl 函数 : babyioctl(fd,command,arg) 判断command ==65537 时执行如下为device_buf 重新分配内存, kmalloc的size由arg控制
 
 ```
-        kfree(babydev_struct.device_buf);
-        babydev_struct.device_buf = (char *)_kmalloc(v4, 37748928LL);
-        babydev_struct.device_buf_len = v4;
+kfree(babydev_struct.device_buf);
+babydev_struct.device_buf = (char *)_kmalloc(v4, 37748928LL);
+babydev_struct.device_buf_len = v4;
 ```
 
 * babyrelease: 释放device_buf
